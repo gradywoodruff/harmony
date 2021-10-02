@@ -1,17 +1,17 @@
 /* --------------------------------------------------------------------------------- 
- * NC_Find_And_Replace.js
+ * NC_Rename.js
  *
  * Jason Schleifer / 26 October 2018
- * Latest Revision: v2.0 - 25 Nov 2018, 10:04 AM
+ * Latest Revision: v2.0 - 25 November 2018, 10:04 AM
  * License: GPL v3
  * 
  * Description:
  * -----------
- * Finds and replaces text in the selected nodes.
+ * Launches a window to help you quickly rename the selected nodes.
  * 
  * Usage:
  * ------
- * Select a series of nodes you want to replace the text of. Choose the function NC_FindAndReplace.
+ * Select the node(s) you want to rename. Choose NC_Rename
  * 
  * Requirements:
  * -------------
@@ -37,14 +37,9 @@ include("NC_Utils.js");
  * 
  * @return {void}
  */
-function NC_FindAndReplace() {
-
+function NC_Rename() {
     var myUi = NC_CreateWidget()
-    var findLE = new QLineEdit();
     var replaceLE = new QLineEdit();
-    var findLELabel = new QLabel();
-    findLELabel.text = "Find:";
-    findLE.text = "asdf";
     var replaceLELabel = new QLabel();
     replaceLELabel.text = "Replace:";
     var submit = new QPushButton();
@@ -52,9 +47,7 @@ function NC_FindAndReplace() {
     var cancel = new QPushButton();
     cancel.text = "CANCEL";
 
-    myUi.gridLayout.addWidget(findLELabel, 0, 0);
     myUi.gridLayout.addWidget(replaceLELabel, 1, 0);
-    myUi.gridLayout.addWidget(findLE, 0, 1);
     myUi.gridLayout.addWidget(replaceLE, 1, 1);
     myUi.gridLayout.addWidget(submit, 2, 0);
     myUi.gridLayout.addWidget(cancel, 2, 1);
@@ -62,9 +55,9 @@ function NC_FindAndReplace() {
 
     myUi.show();
     replaceLE.setFocus(true); // here is the line you need !
-    var findAndReplace = function() {
-        var _find = findLE.text;
-        var _replace = replaceLE.text;
+
+    var renameAll = function() {
+        var _newName = replaceLE.text;
         var n = selection.numberOfNodesSelected();
 
         for (i = 0; i < n; ++i) {
@@ -73,7 +66,11 @@ function NC_FindAndReplace() {
             var nodeNamePath = selNode.split("/");
             var nodeName = nodeNamePath[nodeNamePath.length - 1];
 
-            var newNodeName = nodeName.replace(_find, _replace);
+            var newNodeName = _newName;
+            if (n > 1) {
+                newNodeName = newNodeName + "_" + (i + 1);
+            }
+
             var columnId = node.linkedColumn(selNode, "DRAWING.ELEMENT");
             var elementKey = column.getElementIdOfDrawing(columnId);
             var newColumnName = newNodeName;
@@ -86,7 +83,8 @@ function NC_FindAndReplace() {
         myUi.close();
     }
 
-    submit.clicked.connect(myUi, findAndReplace);
+    submit.clicked.connect(myUi, renameAll);
     cancel.clicked.connect(myUi, myUi.close);
+
 
 }
