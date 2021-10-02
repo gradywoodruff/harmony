@@ -1,8 +1,13 @@
 /* ---------------------------------------------------------------------------------
  * NC_Find_And_Replace.js
  *
+ * Original:
  * Jason Schleifer / 26 October 2018
  * Latest Revision: v2.0 - 25 Nov 2018, 10:04 AM
+ *
+ * Modified:
+ * J Grady Woodruff IV / 2 October 2021
+ * Latest Revision: v3.0 - 2 Nov 2021
  * License: GPL v3
  *
  * Description:
@@ -17,10 +22,6 @@
  * -------------
  * NC_Utils.js
  *
- * Updates:
- * --------
- * v2.0 - added use of NC_Utils.js
- *
  * Installation:
  * -------------
  * https://docs.toonboom.com/help/harmony-16/premium/scripting/import-script.html
@@ -33,14 +34,13 @@
 
 include("NC_Utils.js")
 
-var DEFAULT_GROUP = "ASD"
-var DEFAULT_ELEMENT = "asdf"
-
 /**
- *
  * @return {void}
  */
 function NC_FindAndReplace() {
+  var DEFAULT_GROUP = "ASD"
+  var DEFAULT_ELEMENT = "asdf"
+
   var myUi = NC_CreateWidget()
   var fields = {}
 
@@ -57,52 +57,83 @@ function NC_FindAndReplace() {
     fields[fieldName] = {
       value: null,
       isDefault: false,
-      position: null,
       widgets: {}
     }
   }
 
-  var getNodeParts = function (nodeName) {
+  var getNodeParts = function (selNode) {
+    var nodeNamePath = selNode.split("/")
+    var nodeName = nodeNamePath[nodeNamePath.length - 1]
+    var nodeType = node.type(selNode)
+
+    /// Clean node name for parsing
+    if (nodeType == "PEG") {
+      nodeName = nodeName.replace("-P", "")
+    }
+
     var nodeParts = nodeName.split("-")
     /// If name is separated by a `-` it
     /// means the node name contains a
     /// Group and Element name
-    if (nodeParts.length > 1) {
-      /// Check for Node Group
-      var isGroupName = nodeParts[0] === nodeParts[0].toUpperCase()
-      if (isGroupName) {
-        /// Check if Group name is the same
+    switch (nodeParts.length) {
+      case 0:
+        break
+
+      case 1:
+        /// Check if Element name is the same
         /// in each selected node
-        addField("group")
+        addField("element")
         if (
-          !fields["group"].value ||
-          fields["group"].value === nodeParts[0]
+          !fields["element"].value ||
+          fields["element"].value === nodeParts[0]
         ) {
-          fields["group"].value = nodeParts[0]
-          if (nodeParts[0] === DEFAULT_GROUP) {
-            fields["group"].isDefault = true
+          fields["element"].value = nodeParts[0]
+          if (nodeParts[0] === DEFAULT_ELEMENT) {
+            fields["element"].isDefault = true
           }
         } else {
-          fields["group"].value = null
-          fields["group"].isDefault = false
+          fields["element"].value = null
+          fields["element"].isDefault = false
         }
-      }
+        break
 
-      /// Check if Element name is the same
-      /// in each selected node
-      addField("element")
-      if (
-        !fields["element"].value ||
-        fields["element"].value === nodeParts[1]
-      ) {
-        fields["element"].value = nodeParts[1]
-        if (nodeParts[1] === DEFAULT_ELEMENT) {
-          fields["element"].isDefault = true
+      default:
+        /// Check for Node Group
+        var isGroupName = nodeParts[0] === nodeParts[0].toUpperCase()
+        if (isGroupName) {
+          /// Check if Group name is the same
+          /// in each selected node
+          addField("group")
+          if (
+            !fields["group"].value ||
+            fields["group"].value === nodeParts[0]
+          ) {
+            fields["group"].value = nodeParts[0]
+            if (nodeParts[0] === DEFAULT_GROUP) {
+              fields["group"].isDefault = true
+            }
+          } else {
+            fields["group"].value = null
+            fields["group"].isDefault = false
+          }
         }
-      } else {
-        fields["element"].value = null
-        fields["element"].isDefault = false
-      }
+
+        /// Check if Element name is the same
+        /// in each selected node
+        addField("element")
+        if (
+          !fields["element"].value ||
+          fields["element"].value === nodeParts[1]
+        ) {
+          fields["element"].value = nodeParts[1]
+          if (nodeParts[1] === DEFAULT_ELEMENT) {
+            fields["element"].isDefault = true
+          }
+        } else {
+          fields["element"].value = null
+          fields["element"].isDefault = false
+        }
+        break
     }
   }
 
@@ -111,15 +142,9 @@ function NC_FindAndReplace() {
     var n = selection.numberOfNodesSelected()
 
     for (var i = 0; i < n; ++i) {
-      var selNode = selection.selectedNode(i)
-      var nodeNamePath = selNode.split("/")
-      var nodeName = nodeNamePath[nodeNamePath.length - 1]
-
-      getNodeParts(nodeName)
+      getNodeParts(selection.selectedNode(i))
     }
 
-    var fieldLength = Object.keys(fields).length
-    var labelsWithFieldNames = fieldLength > 1
     var fieldPosition = 0
     for (field in fields) {
       var fieldName = field.charAt(0).toUpperCase() + field.slice(1)
@@ -131,13 +156,10 @@ function NC_FindAndReplace() {
         fields[field].widgets.findLabel = new QLabel()
         fields[field].widgets.findEdit = new QLineEdit()
 
-        var findFieldLabel = labelsWithFieldNames
-          ? "Find " + fieldName + ":"
-          : "Find:"
+        fields[field].widgets.findLabel.text =
+          "Find " + fieldName + " Name:"
+        fields[field].widgets.findEdit.text = findFieldValue
 
-        fields[field].widgets.findLabel.text = findFieldLabel
-
-        // fields[field].position = fieldPosition
         myUi.gridLayout.addWidget(
           fields[field].widgets.findLabel,
           fieldPosition,
@@ -157,11 +179,9 @@ function NC_FindAndReplace() {
       var replaceInstruction = fields[field].isDefault
         ? "New"
         : "Replace"
-      var replaceFieldWidgetLabel = labelsWithFieldNames
-        ? replaceInstruction + " " + fieldName + ":"
-        : replaceInstruction + ":"
 
-      fields[field].widgets.replaceLabel.text = replaceFieldWidgetLabel
+      fields[field].widgets.replaceLabel.text =
+        replaceInstruction + " " + fieldName + " Name:"
 
       myUi.gridLayout.addWidget(
         fields[field].widgets.replaceLabel,
@@ -182,32 +202,62 @@ function NC_FindAndReplace() {
     myUi.gridLayout.addWidget(buttonCancel, fieldPosition, 0)
 
     myUi.show()
-    // replaceLE.setFocus(true)
+
+    for (var field in fields) {
+      if (isDefault) {
+        fields[field].widgets.replaceEdit.setFocus(true)
+      } else {
+        fields[field].widgets.findEdit.setFocus(true)
+      }
+      break
+    }
   }
 
-  // var findAndReplace = function () {
-  //   var _find = findLE.text
-  //   var _replace = replaceLE.text
-  //   var n = selection.numberOfNodesSelected()
+  var findAndReplace = function () {
+    var _find = []
+    var _replace = []
+    for (field in fields) {
+      var replaceValue = fields[field].widgets.replaceEdit.text
+      if (!replaceValue || replaceValue === "") {
+        continue
+      }
 
-  //   for (var i = 0; i < n; ++i) {
-  //     var selNode = selection.selectedNode(i)
-  //     var nodeNamePath = selNode.split("/")
-  //     var nodeName = nodeNamePath[nodeNamePath.length - 1]
+      var findValue
+      if (fields[field].isDefault) {
+        if (field === "group") {
+          findValue = DEFAULT_GROUP
+        } else if (field === "element") {
+          findValue = DEFAULT_ELEMENT
+        }
+      } else {
+        findValue = fields[field].widgets.findEdit.text
+      }
 
-  //     var newNodeName = nodeName.replace(_find, _replace)
-  //     var columnId = node.linkedColumn(selNode, "DRAWING.ELEMENT")
-  //     var elementKey = column.getElementIdOfDrawing(columnId)
+      _find.push(findValue)
+      _replace.push(replaceValue)
+    }
 
-  //     node.rename(selNode, newNodeName)
-  //     column.rename(columnId, newNodeName)
-  //     element.renameById(elementKey, newNodeName)
-  //   }
+    var n = selection.numberOfNodesSelected()
+    for (var i = 0; i < n; ++i) {
+      var selNode = selection.selectedNode(i)
+      var nodeNamePath = selNode.split("/")
+      var nodeName = nodeNamePath[nodeNamePath.length - 1]
+      var newNodeName = nodeName.replace(
+        _find.join("-"),
+        _replace.join("-")
+      )
+      var columnId = node.linkedColumn(selNode, "DRAWING.ELEMENT")
+      var elementKey = column.getElementIdOfDrawing(columnId)
 
-  //   myUi.close()
-  // }
+      node.rename(selNode, newNodeName)
+      column.rename(columnId, newNodeName)
+      element.renameById(elementKey, newNodeName)
+    }
+
+    myUi.close()
+  }
 
   buildDynamicUi()
-  // buttonSubmit.clicked.connect(myUi, findAndReplace)
+  buttonSubmit.clicked.connect(myUi, findAndReplace)
   buttonCancel.clicked.connect(myUi, myUi.close)
 }
