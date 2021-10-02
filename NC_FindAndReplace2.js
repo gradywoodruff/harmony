@@ -33,21 +33,15 @@
 
 include("NC_Utils.js")
 
+var DEFAULT_GROUP = "ASD"
+var DEFAULT_ELEMENT = "asdf"
+
 /**
  *
  * @return {void}
  */
 function NC_FindAndReplace() {
   var myUi = NC_CreateWidget()
-
-  /// Fixed Fields
-  var replaceLE = new QLineEdit()
-  var findLELabel = new QLabel()
-  var replaceLELabel = new QLabel()
-
-  /// Fixed Field Values
-  findLELabel.text = "Find:"
-  replaceLELabel.text = "Replace:"
 
   var buildDynamicUi = function () {
     var n = selection.numberOfNodesSelected()
@@ -82,35 +76,12 @@ function NC_FindAndReplace() {
           nodeElement = null
         }
       }
-
-      // var newNodeName = nodeName.replace(_find, _replace)
-      // var columnId = node.linkedColumn(selNode, "DRAWING.ELEMENT")
-      // var elementKey = column.getElementIdOfDrawing(columnId)
-      // var newColumnName = newNodeName
-
-      // node.rename(selNode, newNodeName)
-      // column.rename(columnId, newNodeName)
-      // element.renameById(elementKey, newNodeName)
     }
 
-    // var findLE = new QLineEdit()
-    // findLE.text = "asdf"
-
-    // var submit = new QPushButton()
-    // submit.text = "Submit"
-
-    // var cancel = new QPushButton()
-    // cancel.text = "Cancel"
-
-    // myUi.gridLayout.addWidget(findLELabel, 0, 0)
-    // myUi.gridLayout.addWidget(findLE, 0, 1)
-    // myUi.gridLayout.addWidget(replaceLELabel, 1, 0)
-    // myUi.gridLayout.addWidget(replaceLE, 1, 1)
-    // myUi.gridLayout.addWidget(submit, 2, 1)
-    // myUi.gridLayout.addWidget(cancel, 2, 0)
+    myUi.show()
+    replaceLE.setFocus(true)
   }
-  myUi.show()
-  replaceLE.setFocus(true)
+
   var findAndReplace = function () {
     var _find = findLE.text
     var _replace = replaceLE.text
@@ -134,6 +105,7 @@ function NC_FindAndReplace() {
     myUi.close()
   }
 
+  buildDynamicUi()
   submit.clicked.connect(myUi, findAndReplace)
   cancel.clicked.connect(myUi, myUi.close)
 }
