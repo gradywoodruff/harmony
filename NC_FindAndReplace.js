@@ -39,54 +39,57 @@ include("NC_Utils.js");
  */
 function NC_FindAndReplace() {
 
-    var myUi = NC_CreateWidget()
-    var findLE = new QLineEdit();
-    var replaceLE = new QLineEdit();
-    var findLELabel = new QLabel();
-    findLELabel.text = "Find:";
-    findLE.text = "asdf";
-    var replaceLELabel = new QLabel();
-    replaceLELabel.text = "Replace:";
-    var submit = new QPushButton();
-    submit.text = "OK";
-    var cancel = new QPushButton();
-    cancel.text = "CANCEL";
+  var myUi = NC_CreateWidget()
+  var replaceLE = new QLineEdit();
 
-    myUi.gridLayout.addWidget(findLELabel, 0, 0);
-    myUi.gridLayout.addWidget(replaceLELabel, 1, 0);
-    myUi.gridLayout.addWidget(findLE, 0, 1);
-    myUi.gridLayout.addWidget(replaceLE, 1, 1);
-    myUi.gridLayout.addWidget(submit, 2, 0);
-    myUi.gridLayout.addWidget(cancel, 2, 1);
-    //myUi.setWindowFlags(Qt.FramelessWindowHint);
+  var findLELabel = new QLabel();
+  findLELabel.text = "Find:";
 
-    myUi.show();
-    replaceLE.setFocus(true); // here is the line you need !
-    var findAndReplace = function() {
-        var _find = findLE.text;
-        var _replace = replaceLE.text;
-        var n = selection.numberOfNodesSelected();
+  var findLE = new QLineEdit();
+  findLE.text = "asdf";
 
-        for (i = 0; i < n; ++i) {
+  var replaceLELabel = new QLabel();
+  replaceLELabel.text = "Replace:";
 
-            var selNode = selection.selectedNode(i);
-            var nodeNamePath = selNode.split("/");
-            var nodeName = nodeNamePath[nodeNamePath.length - 1];
+  var submit = new QPushButton();
+  submit.text = "Replace";
 
-            var newNodeName = nodeName.replace(_find, _replace);
-            var columnId = node.linkedColumn(selNode, "DRAWING.ELEMENT");
-            var elementKey = column.getElementIdOfDrawing(columnId);
-            var newColumnName = newNodeName;
+  var cancel = new QPushButton();
+  cancel.text = "Cancel";
 
-            node.rename(selNode, newNodeName);
-            column.rename(columnId, newNodeName);
-            element.renameById(elementKey, newNodeName);
-        }
+  myUi.gridLayout.addWidget(findLELabel, 0, 0);
+  myUi.gridLayout.addWidget(replaceLELabel, 1, 0);
+  myUi.gridLayout.addWidget(findLE, 0, 1);
+  myUi.gridLayout.addWidget(replaceLE, 1, 1);
+  myUi.gridLayout.addWidget(submit, 2, 0);
+  myUi.gridLayout.addWidget(cancel, 2, 1);
 
-        myUi.close();
+  myUi.show();
+  replaceLE.setFocus(true);
+  var findAndReplace = function () {
+    var _find = findLE.text;
+    var _replace = replaceLE.text;
+    var n = selection.numberOfNodesSelected();
+
+    for (var i = 0; i < n; ++i) {
+      var selNode = selection.selectedNode(i);
+      var nodeNamePath = selNode.split("/");
+      var nodeName = nodeNamePath[nodeNamePath.length - 1];
+
+      var newNodeName = nodeName.replace(_find, _replace);
+      var columnId = node.linkedColumn(selNode, "DRAWING.ELEMENT");
+      var elementKey = column.getElementIdOfDrawing(columnId);
+      var newColumnName = newNodeName;
+
+      node.rename(selNode, newNodeName);
+      column.rename(columnId, newNodeName);
+      element.renameById(elementKey, newNodeName);
     }
 
-    submit.clicked.connect(myUi, findAndReplace);
-    cancel.clicked.connect(myUi, myUi.close);
+    myUi.close();
+  }
+
+  submit.clicked.connect(myUi, findAndReplace);
+  cancel.clicked.connect(myUi, myUi.close);
 
 }
