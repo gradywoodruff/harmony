@@ -60,8 +60,8 @@ function NC_FindAndReplace() {
   myUi.gridLayout.addWidget(replaceLELabel, 1, 0)
   myUi.gridLayout.addWidget(findLE, 0, 1)
   myUi.gridLayout.addWidget(replaceLE, 1, 1)
-  myUi.gridLayout.addWidget(submit, 2, 0)
-  myUi.gridLayout.addWidget(cancel, 2, 1)
+  myUi.gridLayout.addWidget(submit, 2, 1)
+  myUi.gridLayout.addWidget(cancel, 2, 0)
 
   myUi.show()
   replaceLE.setFocus(true)
