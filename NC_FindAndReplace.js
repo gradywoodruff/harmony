@@ -233,6 +233,10 @@ function NC_FindAndReplace() {
         findValue = fields[field].widgets.findEdit.text
       }
 
+      if (field === "group") {
+        replaceValue = replaceValue.toUpperCase()
+      }
+
       _find.push(findValue)
       _replace.push(replaceValue)
     }
